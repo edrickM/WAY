@@ -8,52 +8,73 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {auth} from '../firebase';
+import {useNavigation} from '@react-navigation/core';
 
-const LoginScreen = (navigation) => {
+const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSignUp = () => {
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        navigation.navigate('Home');
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleLogin = () => {
     auth
-      .createUserWithEmailAndPassword(email, password)
+      .signInWithEmailAndPassword(email, password)
       .then(userCredentials => {
         const user = userCredentials.user;
-        console.log(user.email);
+        console.log('Logged in with:', user.email);
       })
       .catch(error => alert(error.message));
   };
 
   return (
-  <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS == "ios" ? "padding" : "height" }>
-      
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS == 'ios' ? 'padding' : 'height'}>
         <View style={styles.inputContainer}>
           <TextInput
             placeholder="Email"
+            placeholderTextColor="#354259"
             value={email}
             onChangeText={text => setEmail(text)}
             style={styles.input}
           />
           <TextInput
             placeholder="Password"
+            placeholderTextColor="#354259"
             value={password}
             onChangeText={text => setPassword(text)}
             style={styles.input}
             secureTextEntry={true}
           />
-        <Text style={styles.smallText}>
-          New user?
-          <Text
-            style={styles.clickableText}
-            onPress={() => navigation.navigate('Registration')}>
-            Create an Account
-          </Text>
-        </Text>
         </View>
-    </KeyboardAvoidingView>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <Text style={styles.buttonText}>Login</Text>
+          </TouchableOpacity>
+          <Text style={styles.smallText}>
+            New user?
+            <Text
+              style={styles.clickableText}
+              onPress={() => navigation.navigate('Sign up')}>
+              Create an Account
+            </Text>
+          </Text>
+        </View>
+      </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
 };
@@ -64,12 +85,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'white',
   },
   inputContainer: {
     width: '80%',
+    marginTop: 130,
   },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: '#D3DEDC',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 10,
@@ -79,10 +102,10 @@ const styles = StyleSheet.create({
     width: '60%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 30,
   },
   button: {
-    backgroundColor: '#0782f9',
+    backgroundColor: '#354259',
     width: '100%',
     padding: 15,
     borderRadius: 10,
@@ -112,8 +135,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   smallText: {
-    marginTop: 3,
-    color: 'grey',
+    marginTop: 5,
+    color: '#354259',
     fontWeight: '700',
     fontSize: 10,
     textAlign: 'center',
