@@ -15,13 +15,17 @@ import {auth} from '../firebase';
 import {useNavigation} from '@react-navigation/core';
 
 const LoginScreen = () => {
+
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const navigation = useNavigation();
 
+  var user = auth.currentUser;
+
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
+    const unsubscribe = auth.onAuthStateChanged(function(user) {
       if (user) {
         navigation.navigate('Home');
       }
