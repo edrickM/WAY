@@ -10,21 +10,20 @@ import {useState, useEffect} from 'react';
 
  const Stack = createNativeStackNavigator();
 
- 
 
 export default function App() {
-
   return (
     checkLoginStatus ? (
       <NavigationContainer>
        <Stack.Navigator>
+       <Stack.Screen options={{headerShown: false}} name="Login" component={LoginScreen} />
          <Stack.Screen options={{headerShown: false}} name="Home" component={HomeScreen} />
-         <Stack.Screen options={{headerShown: false}} name="Sign up" component={RegistrationScreen} />
        </Stack.Navigator>
      </NavigationContainer>
     ) : (
       <NavigationContainer>
         <Stack.Navigator>
+        <Stack.Screen options={{headerShown: false}} name="Sign up" component={RegistrationScreen} />
         <Stack.Screen options={{headerShown: false}} name="Login" component={LoginScreen} />
         </Stack.Navigator>
       </NavigationContainer>
