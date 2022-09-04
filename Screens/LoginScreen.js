@@ -55,14 +55,14 @@ const LoginScreen = () => {
           </View>
           <TextInput
             placeholder="Email"
-            placeholderTextColor="#354259"
+            placeholderTextColor="#929292"
             value={email}
             onChangeText={text => setEmail(text)}
             style={styles.input}
           />
           <TextInput
             placeholder="Password"
-            placeholderTextColor="#354259"
+            placeholderTextColor="#929292"
             value={password}
             onChangeText={text => setPassword(text)}
             style={styles.input}
@@ -87,6 +87,7 @@ const LoginScreen = () => {
         </View>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
+    
   );
 };
 export default LoginScreen;
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: 299,
-    marginTop: 210,
+    marginTop: 390,
   },
   input: {
     backgroundColor: '#D3DEDC',
@@ -108,12 +109,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 13,
     marginTop: 5,
+    marginBottom: 5,
   },
   buttonContainer: {
     width: 190,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 80,
   },
   button: {
     backgroundColor: '#002376',
@@ -156,6 +158,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     left: 15,
+    bottom: 37,
+    
   },
   logo: {
     position: 'absolute',
@@ -163,11 +167,11 @@ const styles = StyleSheet.create({
     bottom: 30,
     alignItems: 'center',
     resizeMode: 'contain',
-    width: 200,
+    width: 230,
   },
   logoText: {
-    marginRight: 17,
+    marginRight: 20,
     alignContent: 'center',
-    bottom: 45,
+    bottom: 35,
   },
 });

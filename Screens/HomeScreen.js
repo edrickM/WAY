@@ -113,5 +113,4 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -Dimensions.get('window').height + 70,
   },
- 
 });
