@@ -15,6 +15,8 @@ import {useState, useEffect} from 'react';
 import {auth} from '../firebase';
 import {useNavigation} from '@react-navigation/core';
 import logo from '../assets/logo.png';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -22,12 +24,16 @@ const LoginScreen = () => {
 
   const navigation = useNavigation();
 
-  var user = auth.currentUser;
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
         navigation.navigate('Home');
+        console.log("logged in")
+      }
+      else{
+        navigation.navigate('Auth')
+        console.log("not logged in")
       }
     });
     return unsubscribe;

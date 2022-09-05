@@ -6,21 +6,12 @@ import logo from '../assets/logo.png';
 import {useNavigation} from '@react-navigation/core';
 
 const LodingScreen = () => {
-  var user = auth.currentUser;
+  
   const navigation = useNavigation();
-
-  function checkLoginStatus() {
-    const isSignedin = false;
-    if (auth.currentUser) {
-      isSignedin = true;
-    }
-    return isSignedin;
-  }
-
+  
   useEffect(() => {
     setTimeout(() => {
-      const userStatus = checkLoginStatus()
-      if (userStatus){
+      if (auth.currentUser){
         navigation.navigate('Home')
       }else{
         navigation.navigate('Auth')
@@ -31,9 +22,7 @@ const LodingScreen = () => {
   return (
     <View style={styles.container}>
       <Image source={logo} style={styles.logo}></Image>
-      <ActivityIndicator size={"large"}>
-
-      </ActivityIndicator>
+      <ActivityIndicator size={"large"}></ActivityIndicator>
     </View>
   );
 };
