@@ -1,116 +1,271 @@
-import {StyleSheet, Text, View, Dimensions, Animated} from 'react-native';
-import MapView, {Callout} from 'react-native-maps';
-import React from 'react';
-import * as Location from 'expo-location';
-import {useEffect, useState} from 'react';
-import {addLocation} from '../LocationManager';
-import {Button, TouchableOpacity} from 'react-native';
-import {auth} from '../firebase';
-import {useNavigation} from '@react-navigation/core';
+import React, {Component} from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  Dimensions,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import MapView, {Marker, AnimatedRegion} from 'react-native-maps';
+const Scaledrone = require('scaledrone-react-native');
+const SCALEDRONE_CHANNEL_ID =('PMPs48ZjR8VGrTSE');
 
+const screen = Dimensions.get('window');
 
-const HomeScreen = () => {
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [region, setRegion] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
+const ASPECT_RATIO = screen.width / screen.height;
+const LATITUDE_DELTA = 0.0922;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
-  useEffect(() => {
-    async () => {
-      let {status} = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
-        return;  
+export default class App extends Component {
+
+  constructor() {
+    super();
+    this.state = {
+      members: []
+    };
+  }
+
+  componentDidMount() {
+    const drone = new Scaledrone(SCALEDRONE_CHANNEL_ID);
+    drone.on('error', error => console.error(error));
+    drone.on('close', reason => console.error(reason));
+    
+    //on open, prompt user for name and authenticate with jwt
+    drone.on('open', error => {
+      if (error) {
+        return console.error(error);
       }
-
-      let {
-        coords: {latitude, longitude},
-      } = await Location.getCurrentPositionAsync({});
-      setUserLocation(JSON.stringify({latitude, longitude}));
-
-      setRegion({
-        latitude,
-        longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
+      Alert.prompt(
+        'Please insert your name',
+        null,
+        name => doAuthRequest(drone.clientId, name).then(
+          jwt => drone.authenticate(jwt)
+        )
+      );
+    });
+    const room = drone.subscribe('observable-locations', {
+      historyCount: 50 // load 50 past messages
+    });
+    room.on('open', error => {
+      if (error) {
+        return console.error(error);
+      }
+      this.startLocationTracking(position => {
+        const {latitude, longitude} = position.coords;
+        // publish device's new location
+        drone.publish({
+          room: 'observable-locations',
+          message: {latitude, longitude}
+        });
       });
+    });
+    // received past message
+    room.on('history_message', message =>
+      this.updateLocation(message.data, message.clientId)
+    );
+    // received new message
+    room.on('data', (data, member) =>
+      this.updateLocation(data, member.id)
+    );
+    // array of all connected members
+    room.on('members', members =>
+      this.setState({members})
+    );
+    // new member joined room
+    room.on('member_join', member => {
+      const members = this.state.members.slice(0);
+      members.push(member);
+      this.setState({members});
+    });
+    // member left room
+    room.on('member_leave', member => {
+      const members = this.state.members.slice(0);
+      const index = members.findIndex(m => m.id === member.id);
+      if (index !== -1) {
+        members.splice(index, 1);
+        this.setState({members});
+      }
+    });
+  }
 
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          navigation.replace('Login');
-        }
+  startLocationTracking(callback) {
+    navigator.geolocation.watchPosition(
+      callback,
+      error => console.log(error),
+      {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 1000
+      }
+    );
+  }
+
+  updateLocation(data, memberId) {
+    const {members} = this.state;
+    const member = members.find(m => m.id === memberId);
+    if (!member) {
+      // a history message might be sent from a user who is no longer online
+      return;
+    }
+    if (member.location) {
+      member.location.timing({
+        latitude: data.latitude,
+        longitude: data.longitude,
+      }).start();
+    } else {
+      member.location = new AnimatedRegion({
+        latitude: data.latitude,
+        longitude: data.longitude,
+        latitudeDelta: LATITUDE_DELTA,
+        longitudeDelta: LONGITUDE_DELTA,
       });
-    };
-  }, []);
+      this.forceUpdate();
+    }
+  }
 
-  const updateLocation = () => {
-    var location = {
-      latitude: userLocation.latitude,
-      longitude: userLocation.longitude,
-    };
-    addLocation(location);
-  };
-
-  const handleSignOut = ({navigation}) => {
-    auth
-      .signOut()
-      .then(() => {
-        navigation.replace('login');
-      })
-      .catch(error => alert(error.message));
-  };
-
-  return (
-    <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        showsUserLocation
-        zoomEnabled
-        showsMyLocationButton
-        inittialRegion={region}
-        onRegionChange={region => setRegion(region)}>
-        <TouchableOpacity
-          style={styles.settingsButton}
-          onPress={handleSignOut}>
+  render() {
+    return (
+      <View style={styles.container}>
+        <MapView
+          style={styles.map}
+          ref={ref => {this.map = ref;}}
+          initialRegion={{
+            latitude: 37.600425,
+            longitude: -122.385861,
+            latitudeDelta: LATITUDE_DELTA,
+            longitudeDelta: LONGITUDE_DELTA,
+          }}
+        >
+          {this.createMarkers()}
+        </MapView>
+        <View pointerEvents="none" style={styles.members}>
+          {this.createMembers()}
+        </View>
+        {/* <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            onPress={() => this.fitToMarkersToMap()}
+            style={[styles.bubble, styles.button]}
+          >
+            <Text>Fit Markers Onto Map</Text>
           </TouchableOpacity>
-      </MapView>
-      {/* <Animated.View style={styles.drawerContainer}></Animated.View> */}
-    </View>
-  );
-};
+        </View> */}
+      </View>
+    );
+  }
 
-export default HomeScreen;
+  createMarkers() {
+    const {members} = this.state;
+    const membersWithLocations = members.filter(m => !!m.location);
+    return membersWithLocations.map(member => {
+      const {id, location, authData} = member;
+      const {name, color} = authData;
+      return (
+        <Marker.Animated
+          key={id}
+          identifier={id}
+          coordinate={location}
+          pinColor={color}
+          title={name}
+        />
+      );
+    });
+  }
 
-// const { height } = Dimensions.get('window');
+  createMembers() {
+    const {members} = this.state;
+    return members.map(member => {
+      const {name, color} = member.authData;
+      return (
+        <View key={member.id} style={styles.member}>
+          <View style={[styles.avatar, {backgroundColor: color}]}></View>
+          <Text style={styles.memberName}>{name}</Text>
+        </View>
+      );
+    });
+  }
+
+  fitToMarkersToMap() {
+    const {members} = this.state;
+    this.map.fitToSuppliedMarkers(members.map(m => m.id), true);
+  }
+}
+
+function doAuthRequest(clientId, name) {
+  let status;
+  return fetch('http://localhost:3000/auth', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({clientId, name}),
+  }).then(res => {
+    status = res.status;
+    return res.text();
+  }).then(text => {
+    if (status === 200) {
+      return text;
+    } else {
+      alert(text);
+    }
+  }).catch(error => console.error(error));
+}
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    justifyContent: 'center',
   },
   map: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
+    ...StyleSheet.absoluteFillObject,
   },
-  settingsButton: {
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.2)',
-    alignSelf: 'flex-end',
-    top: 70,
-    right: 20,
-    alignContent: 'flex-end',
-    position: 'absolute',
-    width: 50,
-    height: 50,
-    backgroundColor: '#fff',
-    borderRadius: 50,
+  bubble: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 20,
+    marginRight: 20,
   },
-  drawerContainer: {
+  latlng: {
+    width: 200,
+    alignItems: 'stretch',
+  },
+  button: {
+    width: 80,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    marginVertical: 20,
+    backgroundColor: 'transparent',
+  },
+  members: {
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
     width: '100%',
-    height: Dimensions.get('window').height,
-    backgroundColor: '#fff',
-    borderRadius: 25,
-    position: 'absolute',
-    bottom: -Dimensions.get('window').height + 70,
+    paddingHorizontal: 10,
   },
+  member: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,1)',
+    borderRadius: 20,
+    height: 30,
+    marginTop: 10,
+  },
+  memberName: {
+    marginHorizontal: 10,
+  },
+  avatar: {
+    height: 30,
+    width: 30,
+    borderRadius: 15,
+  }
 });

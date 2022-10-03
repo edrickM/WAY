@@ -28,30 +28,45 @@ const Auth = () => {
   )
 }
 
-export default function App() {
+export default function App(){
   return(
     <NavigationContainer>
-      <Stack.Navigator initialRouteName='Loading'>
-        <Stack.Screen
-          options={{headerShown:false}}
-          name="Loading"
-          component={LoadingScreen}
-        />
+      <Stack.Navigator initialRouteName='HomeScreen'>
         <Stack.Screen
         options={{headerShown:false}}
-        name="Auth"
-        component={Auth}
-        />
-        <Stack.Screen
-        options={{headerShown:false}}
-        name="Home"
-        component={HomeScreen}
+                name="Home"
+                component={HomeScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>
   )
- 
 }
+
+// export default function App() {
+//   return(
+//     <NavigationContainer>
+//       <Stack.Navigator initialRouteName='HomeScreen'>
+//         <Stack.Screen
+//           options={{headerShown:false}}
+//           name="Loading"
+//           component={LoadingScreen}
+//         />
+//         <Stack.Screen
+//         options={{headerShown:false}}
+//         name="Auth"
+//         component={Auth}
+//         />
+//         <Stack.Screen
+//         options={{headerShown:false}}
+//         name="Home"
+//         component={HomeScreen}
+//         />
+//       </Stack.Navigator>
+//     </NavigationContainer>
+//   )
+// }
+
+
 
 function checkLoginStatus() {
   const isSignedin = false;
