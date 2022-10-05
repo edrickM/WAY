@@ -30,7 +30,7 @@ export default class App extends Component {
     const drone = new Scaledrone(SCALEDRONE_CHANNEL_ID);
     drone.on('error', error => console.error(error));
     drone.on('close', reason => console.error(reason));
-    
+
     //on open, prompt user for name and authenticate with jwt
     drone.on('open', error => {
       if (error) {
@@ -191,9 +191,10 @@ export default class App extends Component {
   }
 }
 
-function doAuthRequest(clientId, name) {
+//Post request that sends clientId and name to server
+async function doAuthRequest(clientId, name) {
   let status;
-  return fetch('http://localhost:3000/auth', {
+  return fetch('http://10.22.151.48:19000/auth', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
