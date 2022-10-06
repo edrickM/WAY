@@ -1,3 +1,4 @@
+import { response } from 'express';
 import React, {Component} from 'react';
 import {
   StyleSheet,
@@ -10,6 +11,7 @@ import {
 import MapView, {Marker, AnimatedRegion} from 'react-native-maps';
 const Scaledrone = require('scaledrone-react-native');
 const SCALEDRONE_CHANNEL_ID =('PMPs48ZjR8VGrTSE');
+
 
 const screen = Dimensions.get('window');
 
@@ -32,18 +34,33 @@ export default class App extends Component {
     drone.on('close', reason => console.error(reason));
 
     //on open, prompt user for name and authenticate with jwt
+    // drone.on('open', error => {
+    //   if (error) {
+    //     return console.error(error);
+    //   }
+    //   Alert.prompt(
+    //     'Please insert your name',
+    //     null,
+    //     name => doAuthRequest(drone.clientId, name).then(
+    //       jwt => drone.authenticate(jwt)
+    //     )
+    //   );
+    // });
+
     drone.on('open', error => {
-      if (error) {
+      if (error){
         return console.error(error);
       }
       Alert.prompt(
         'Please insert your name',
         null,
-        name => doAuthRequest(drone.clientId, name).then(
-          jwt => drone.authenticate(jwt)
-        )
-      );
+
+        fetch('auth/' + drone.clientId)
+        .then(response => response.text())
+        .then(jwt => drone.authenticate(jwt))
+      )
     });
+
     const room = drone.subscribe('observable-locations', {
       historyCount: 50 // load 50 past messages
     });
@@ -192,9 +209,9 @@ export default class App extends Component {
 }
 
 //Post request that sends clientId and name to server
-async function doAuthRequest(clientId, name) {
+ function doAuthRequest(clientId, name) {
   let status;
-  return fetch('http://10.22.151.48:19000/auth', {
+  return fetch('http://10.22.151.48:19001/generateToken', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
