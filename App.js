@@ -5,7 +5,6 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import LoginScreen from './Screens/LoginScreen';
 import HomeScreen from './Screens/HomeScreen';
 import RegistrationScreen from './Screens/RegistrationScreen';
-import indexDebug from './Server/index';
 import LoadingScreen from './Screens/LoadingScreen'
 import {auth} from './firebase';
 import {useState, useEffect} from 'react';

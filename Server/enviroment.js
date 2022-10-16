@@ -1,0 +1,5 @@
+export const ENV = {
+  CHANNEL_ID: 'PMPs48ZjR8VGrTSE',
+  CHANNEL_SECRET: 'uL47oyetYkE2cLUMIkPBNYX66PWlpAnN',
+};
+
