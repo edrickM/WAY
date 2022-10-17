@@ -215,7 +215,7 @@ export default class App extends Component {
 function doAuthRequest(clientId, name) {
   let status;
   return fetch(
-    'https://bbfd-2605-ad80-30-841a-fcf6-fad2-4b64-198a.ngrok.io/auth',
+    'https://69da-2605-ad80-30-841a-e4ab-2e1e-f3a5-a8c.ngrok.io/auth',
     {
       method: 'POST',
       headers: {

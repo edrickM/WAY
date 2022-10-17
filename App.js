@@ -28,24 +28,25 @@ const Auth = () => {
   )
 }
 
-export default function App(){
+const AppStack = () => {
   return(
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName='HomeScreen'>
-        <Stack.Screen
-        options={{headerShown:false}}
-                name="Home"
-                component={HomeScreen}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator>
+      <Stack.Screen 
+      options={{headerShown:false}}
+      name="Home"
+      component={HomeScreen}
+      />
+
+    </Stack.Navigator>
   )
 }
+
+
 
 // export default function App() {
 //   return(
 //     <NavigationContainer>
-//       <Stack.Navigator initialRouteName='HomeScreen'>
+//       <Stack.Navigator initialRouteName='LoadingScreen'>
 //         <Stack.Screen
 //           options={{headerShown:false}}
 //           name="Loading"
