@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "~1.17.3",
+    "@react-native-community/geolocation": "^3.0.2",
     "@react-navigation/native": "^6.0.10",
     "@react-navigation/native-stack": "^6.6.2",
     "all-the-package-names": "^2.0.93",
+    "cocoapods": "^0.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "envy": "^2.0.0",

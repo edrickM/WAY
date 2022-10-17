@@ -8,10 +8,9 @@ import {
   Alert,
 } from 'react-native';
 import MapView, {Marker, AnimatedRegion} from 'react-native-maps';
-import openMap from 'react-native-open-maps';
 const Scaledrone = require('scaledrone-react-native');
 const SCALEDRONE_CHANNEL_ID = 'PMPs48ZjR8VGrTSE';
-
+import * as Location from 'expo-location';
 const screen = Dimensions.get('window');
 
 const ASPECT_RATIO = screen.width / screen.height;
@@ -23,10 +22,16 @@ export default class App extends Component {
     super();
     this.state = {
       members: [],
+      location: {},
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    let {status} = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      console.log('Permission to access location was denied');
+      return;
+    }
     const drone = new Scaledrone(SCALEDRONE_CHANNEL_ID);
     drone.on('error', error => console.error(error));
     drone.on('close', reason => console.error(reason));
@@ -43,20 +48,6 @@ export default class App extends Component {
       );
     });
 
-    // drone.on('open', error => {
-    //   if (error){
-    //     return console.error(error);
-    //   }
-    //   Alert.prompt(
-    //     'Please insert your name',
-    //     null,
-
-    //     fetch('auth/' + drone.clientId)
-    //     .then(response => response.text())
-    //     .then(jwt => drone.authenticate(jwt))
-    //   )
-    // });
-
     const room = drone.subscribe('observable-locations', {
       historyCount: 50, // load 50 past messages
     });
@@ -64,8 +55,8 @@ export default class App extends Component {
       if (error) {
         return console.error(error);
       }
-      this.startLocationTracking(position => {
-        const {latitude, longitude} = position.coords;
+      this.startLocationTracking(()=> {
+        const {latitude, longitude} = this.state.location;
         // publish device's new location
         drone.publish({
           room: 'observable-locations',
@@ -98,12 +89,11 @@ export default class App extends Component {
     });
   }
 
-  startLocationTracking(callback) {
-    navigator.geolocation.watchPosition(callback, error => console.log(error), {
-      enableHighAccuracy: true,
-      timeout: 20000,
-      maximumAge: 1000,
-    });
+  async startLocationTracking() {
+    let location = await Location.watchPositionAsync(
+      { accuracy: Location.Accuracy.High},
+      (location) => this.setState({location: Location.coords})
+    );
   }
 
   updateLocation(data, memberId) {
@@ -146,7 +136,6 @@ export default class App extends Component {
             longitudeDelta: LONGITUDE_DELTA,
           }}>
           {this.createMarkers()}
-          {/* {this.createRandomMarkers()} */}
         </MapView>
         <View pointerEvents="none" style={styles.members}>
           {this.createMembers()}
@@ -174,20 +163,18 @@ export default class App extends Component {
           identifier={id}
           coordinate={location}
           title={name}
-          
         />
       );
     });
   }
 
-
   createMembers() {
     const {members} = this.state;
     return members.map(member => {
-      const {name, color} = member.authData;
+      const {name} = member.authData;
       return (
         <View key={member.id} style={styles.member}>
-          <View style={[styles.avatar, {backgroundColor: color}]}></View>
+          <View style={styles.avatar}></View>
           <Text style={styles.memberName}>{name}</Text>
         </View>
       );
@@ -202,24 +189,27 @@ export default class App extends Component {
     );
   }
 
-  openGps(memberId){
+  openGps(memberId) {
     const {members} = this.state;
     const member = members.find(m => m.id === memberId);
-    openMap({latitude: member.latitude, longitude: member.longitude})
+    openMap({latitude: member.latitude, longitude: member.longitude});
   }
 }
 
 //Post request that sends clientId and name to server
 function doAuthRequest(clientId, name) {
   let status;
-  return fetch('https://994b-2605-ad80-30-841a-fcf6-fad2-4b64-198a.ngrok.io', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+  return fetch(
+    'https://bbfd-2605-ad80-30-841a-fcf6-fad2-4b64-198a.ngrok.io/auth',
+    {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({clientId, name}),
     },
-    body: JSON.stringify({clientId, name}),
-  })
+  )
     .then(res => {
       status = res.status;
       return res.text();
