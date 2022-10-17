@@ -96,20 +96,6 @@ export default class App extends Component {
     });
   }
 
-  // async startLocationTracking() {
-  //   let {status} = await Location.requestForegroundPermissionsAsync();
-  //   if (status !== 'granted') {
-  //     console.log('Permission to access location was denied');
-  //     return;
-  //   }
-  //   let location = await Location.getCurrentPositionAsync(
-  //     {
-  //       accuracy: Location.Accuracy.Highest,
-  //       distanceInterval: 10,
-  //       maximumAge: 10000,
-  //     },
-  //   );
-  // }
 
   updateLocation(data, memberId) {
     const {members} = this.state;
@@ -158,8 +144,8 @@ export default class App extends Component {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             onPress={() => this.fitToMarkersToMap()}
-            style={[styles.bubble, styles.button]}>
-            <Text>Fit Markers Onto Map</Text>
+            style={[styles.buttonOutline, styles.button]}>
+            <Text style={styles.buttonText}>Fit Markers Onto Map</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -177,6 +163,7 @@ export default class App extends Component {
           key={id}
           identifier={id}
           coordinate={location}
+          pinColor={color}
           title={name}
         />
       );
@@ -186,10 +173,10 @@ export default class App extends Component {
   createMembers() {
     const {members} = this.state;
     return members.map(member => {
-      const {name} = member.authData;
+      const {name, color} = member.authData;
       return (
         <View key={member.id} style={styles.member}>
-          <View style={styles.avatar}></View>
+          <View style={[styles.avatar, {backgroundColor: color}]}></View>
           <Text style={styles.memberName}>{name}</Text>
         </View>
       );
@@ -204,11 +191,9 @@ export default class App extends Component {
     );
   }
 
-  // openGps(memberId) {
-  //   const {members} = this.state;
-  //   const member = members.find(m => m.id === memberId);
-  //   openMap({latitude: member.latitude, longitude: member.longitude});
-  // }
+  openGps(lat,long) {
+    openMap({latitude: lat, longitude: long});
+  }
 }
 
 //Post request that sends clientId and name to server
@@ -260,16 +245,30 @@ const styles = StyleSheet.create({
     width: 200,
     alignItems: 'stretch',
   },
-  button: {
-    width: 80,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    marginHorizontal: 10,
-  },
   buttonContainer: {
-    flexDirection: 'row',
-    marginVertical: 20,
-    backgroundColor: 'transparent',
+    width: 190,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 80,
+    paddingBottom: 25,
+  },
+  button: {
+    // backgroundColor: '#002376',
+    width: '100%',
+    padding: 15,
+    borderRadius: 21,
+    alignItems: 'center',
+  },
+  buttonOutline: {
+    backgroundColor: 'white',
+    marginTop: 5,
+    borderColor: '#0782f9',
+    borderWidth: 2,
+  },
+  buttonText: {
+    color: '#000000',
+    fontWeight: '700',
+    fontSize: 10,
   },
   members: {
     flexDirection: 'column',

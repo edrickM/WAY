@@ -2,6 +2,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
+const colors = require('./colors')
 const cors = require('cors');
 const SCALEDRONE_CHANNEL_ID = ('PMPs48ZjR8VGrTSE');
 const SCALEDRONE_CHANNEL_SECRET = ('uL47oyetYkE2cLUMIkPBNYX66PWlpAnN');
@@ -26,6 +27,7 @@ app.post('/auth', (req, res) => {
           channel: SCALEDRONE_CHANNEL_ID,
           data: {
             name,
+            color: colors.get()
           },
           permissions: {
             "^observable-locations$": {

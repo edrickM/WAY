@@ -1,9 +1,16 @@
-import { StyleSheet, Text, View, KeyboardAvoidingView,
-TouchableWithoutFeedback, Keyboard, TouchableOpacity, TextInput } from 'react-native'
-import React from 'react'
+import {
+  StyleSheet,
+  Text,
+  View,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  TouchableOpacity,
+  TextInput,
+} from 'react-native';
+import React from 'react';
 import {auth} from '../firebase';
 import {useState, useEffect} from 'react';
-
 
 const handleSignUp = () => {
   auth
@@ -16,10 +23,9 @@ const handleSignUp = () => {
 };
 
 const RegistrationScreen = () => {
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const [username, setUsername] = useState('');
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
@@ -36,15 +42,9 @@ const RegistrationScreen = () => {
             value={email}
             onChangeText={text => setEmail(text)}
           />
-          <TextInput style={styles.firstNameInput}>
-            <TextInput style={styles.lastNameInput}>
-              
-            </TextInput>
-          </TextInput>
+          <TextInput style={styles.firstNameInput}></TextInput>
+          <TextInput style={styles.lastNameInput}></TextInput>
 
-          <TextInput>
-            <TextInput></TextInput>
-          </TextInput>
         </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
@@ -54,9 +54,9 @@ const RegistrationScreen = () => {
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
-}
+};
 
-export default RegistrationScreen
+export default RegistrationScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -64,47 +64,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  inputContainer:{
+  inputContainer: {
     marginTop: -150,
     width: 299,
-    
   },
-  emailInput:{
+  emailInput: {
     backgroundColor: '#D3DEDC',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 13,
     marginBottom: 5,
   },
-  firstNameInput:{
-    
+  firstNameInput: {
     backgroundColor: '#D3DEDC',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 13,
     marginBottom: 5,
-    flexDirection:'row'
-    
+    flexDirection: 'row',
   },
-  lastNameInput:{
-    
+  lastNameInput: {
     backgroundColor: '#D3DEDC',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 13,
     marginBottom: 5,
-    flexDirection:'row'
-    
+    flexDirection: 'row',
   },
-  buttonContainer:{
-
+  buttonContainer: {},
+  signUpContainer: {
+    bottom: 220,
   },
-  signUpContainer:{
-   bottom: 220,
-  },
-  signUpText:{
+  signUpText: {
     fontSize: 40,
     fontWeight: 'bold',
-
   },
-})
+});

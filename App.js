@@ -43,29 +43,29 @@ const AppStack = () => {
 
 
 
-// export default function App() {
-//   return(
-//     <NavigationContainer>
-//       <Stack.Navigator initialRouteName='LoadingScreen'>
-//         <Stack.Screen
-//           options={{headerShown:false}}
-//           name="Loading"
-//           component={LoadingScreen}
-//         />
-//         <Stack.Screen
-//         options={{headerShown:false}}
-//         name="Auth"
-//         component={Auth}
-//         />
-//         <Stack.Screen
-//         options={{headerShown:false}}
-//         name="Home"
-//         component={HomeScreen}
-//         />
-//       </Stack.Navigator>
-//     </NavigationContainer>
-//   )
-// }
+export default function App() {
+  return(
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName='LoadingScreen'>
+        <Stack.Screen
+          options={{headerShown:false}}
+          name="Loading"
+          component={LoadingScreen}
+        />
+        <Stack.Screen
+        options={{headerShown:false}}
+        name="Auth"
+        component={Auth}
+        />
+        <Stack.Screen
+        options={{headerShown:false}}
+        name="Home"
+        component={HomeScreen}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  )
+}
 
 
 
