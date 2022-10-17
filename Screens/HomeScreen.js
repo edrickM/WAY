@@ -12,10 +12,12 @@ const Scaledrone = require('scaledrone-react-native');
 const SCALEDRONE_CHANNEL_ID = 'PMPs48ZjR8VGrTSE';
 import * as Location from 'expo-location';
 const screen = Dimensions.get('window');
-
+import openMap from 'react-native-open-maps'
 const ASPECT_RATIO = screen.width / screen.height;
 const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+
+let foregroundSubscription = null;
 
 export default class App extends Component {
   constructor() {
@@ -51,17 +53,22 @@ export default class App extends Component {
     const room = drone.subscribe('observable-locations', {
       historyCount: 50, // load 50 past messages
     });
-    room.on('open', error => {
+    room.on('open', async error => {
       if (error) {
         return console.error(error);
       }
-      this.startLocationTracking(()=> {
-        const {latitude, longitude} = this.state.location;
+      let location = await Location.getCurrentPositionAsync(
+        {
+          accuracy: Location.Accuracy.Highest,
+          distanceInterval: 10,
+          maximumAge: 10000,
+        },
+      );
+        const {latitude, longitude} = location.coords;
         // publish device's new location
         drone.publish({
           room: 'observable-locations',
           message: {latitude, longitude},
-        });
       });
     });
     // received past message
@@ -89,12 +96,20 @@ export default class App extends Component {
     });
   }
 
-  async startLocationTracking() {
-    let location = await Location.watchPositionAsync(
-      { accuracy: Location.Accuracy.High},
-      (location) => this.setState({location: Location.coords})
-    );
-  }
+  // async startLocationTracking() {
+  //   let {status} = await Location.requestForegroundPermissionsAsync();
+  //   if (status !== 'granted') {
+  //     console.log('Permission to access location was denied');
+  //     return;
+  //   }
+  //   let location = await Location.getCurrentPositionAsync(
+  //     {
+  //       accuracy: Location.Accuracy.Highest,
+  //       distanceInterval: 10,
+  //       maximumAge: 10000,
+  //     },
+  //   );
+  // }
 
   updateLocation(data, memberId) {
     const {members} = this.state;
@@ -189,11 +204,11 @@ export default class App extends Component {
     );
   }
 
-  openGps(memberId) {
-    const {members} = this.state;
-    const member = members.find(m => m.id === memberId);
-    openMap({latitude: member.latitude, longitude: member.longitude});
-  }
+  // openGps(memberId) {
+  //   const {members} = this.state;
+  //   const member = members.find(m => m.id === memberId);
+  //   openMap({latitude: member.latitude, longitude: member.longitude});
+  // }
 }
 
 //Post request that sends clientId and name to server
