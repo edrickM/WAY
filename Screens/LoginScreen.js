@@ -86,7 +86,7 @@ const LoginScreen = () => {
             New user?
             <Text
               style={styles.clickableText}
-              onPress={() => navigation.navigate('Sign up')}>
+              /* onPress={() => navigation.navigate('Sign up')} */>
               Create an Account
             </Text>
           </Text>

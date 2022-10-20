@@ -16,7 +16,7 @@ const LodingScreen = () => {
       }else{
         navigation.navigate('Auth')
       }
-    }, 5000);
+    }, 3000);
   }, []);
 
   return (

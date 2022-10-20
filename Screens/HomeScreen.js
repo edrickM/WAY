@@ -12,19 +12,17 @@ const Scaledrone = require('scaledrone-react-native');
 const SCALEDRONE_CHANNEL_ID = 'PMPs48ZjR8VGrTSE';
 import * as Location from 'expo-location';
 const screen = Dimensions.get('window');
-import openMap from 'react-native-open-maps'
+import openMap from 'react-native-open-maps';
 const ASPECT_RATIO = screen.width / screen.height;
 const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
-let foregroundSubscription = null;
 
 export default class App extends Component {
   constructor() {
     super();
     this.state = {
       members: [],
-      location: {},
     };
   }
 
@@ -34,6 +32,8 @@ export default class App extends Component {
       console.log('Permission to access location was denied');
       return;
     }
+
+    //allows us to post messages (locations)
     const drone = new Scaledrone(SCALEDRONE_CHANNEL_ID);
     drone.on('error', error => console.error(error));
     drone.on('close', reason => console.error(reason));
@@ -43,7 +43,7 @@ export default class App extends Component {
       if (error) {
         return console.error(error);
       }
-      Alert.prompt('Please insert your name', null, name =>
+      Alert.prompt('Create a pin with your name', null, name =>
         doAuthRequest(drone.clientId, name).then(jwt =>
           drone.authenticate(jwt),
         ),
@@ -57,18 +57,17 @@ export default class App extends Component {
       if (error) {
         return console.error(error);
       }
-      let location = await Location.getCurrentPositionAsync(
-        {
-          accuracy: Location.Accuracy.Highest,
-          distanceInterval: 10,
-          maximumAge: 10000,
-        },
-      );
-        const {latitude, longitude} = location.coords;
-        // publish device's new location
-        drone.publish({
-          room: 'observable-locations',
-          message: {latitude, longitude},
+      let location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Highest,
+        distanceInterval: 10,
+        maximumAge: 10000,
+      });
+
+      const {latitude, longitude} = location.coords;
+      // publish device's new location
+      drone.publish({
+        room: 'observable-locations',
+        message: {latitude, longitude},
       });
     });
     // received past message
@@ -95,7 +94,6 @@ export default class App extends Component {
       }
     });
   }
-
 
   updateLocation(data, memberId) {
     const {members} = this.state;
@@ -191,7 +189,7 @@ export default class App extends Component {
     );
   }
 
-  openGps(lat,long) {
+  openGps(lat, long) {
     openMap({latitude: lat, longitude: long});
   }
 }
