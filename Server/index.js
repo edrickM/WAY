@@ -1,39 +1,44 @@
+
 const express = require('express');
-const bodyParser = require('body-parser');
-const jwt = require ('jsonwebtoken');
+const jwt = require('jsonwebtoken');
+const colors = require('./colors')
 const cors = require('cors');
-const SCALEDRONE_CHANNEL_ID = require ('PMPs48ZjR8VGrTSE');
-const SCALEDRONE_CHANNEL_SECRET = require ('uL47oyetYkE2cLUMIkPBNYX66PWlpAnN');
+const SCALEDRONE_CHANNEL_ID = ('PMPs48ZjR8VGrTSE');
+const SCALEDRONE_CHANNEL_SECRET = ('uL47oyetYkE2cLUMIkPBNYX66PWlpAnN');
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json()); 
 app.use(cors());
 
-//If clientId and name are valid, we generate a token with clients data
-app.post('/auth', function(req, res) {
+app.post('/auth', (req, res) => {
     const {clientId, name} = req.body;
-    if (!clientId || clientId.lenght < 1){
-        res.status(400).send('Invalid Id');
+
+    if (!clientId || clientId.lenght < 1) {
+      res.status(400).send('Invalid Id');
     }
-    if (!name || name.lenght < 1){
-        res.status(400).send('Invalid Name');
+    if (!name || name.lenght < 1) {
+      res.status(400).send('Invalid Name');
     }
-    const token = jwt.sign({
-        client: clientId,
-        channel: SCALEDRONE_CHANNEL_ID,
-        Permissions: {
-            "^obserbable-locations$": {
-                publish: true,
-                subscribe: true,
-                history: 50, 
-            }
-        },
-        data: {
+      //Creating jwt token
+     const token = jwt.sign(
+        {
+          client: clientId,
+          channel: SCALEDRONE_CHANNEL_ID,
+          data: {
             name,
+            color: colors.get()
+          },
+          permissions: {
+            "^observable-locations$": {
+              publish: true,
+              subscribe: true,
+              history: 50,
+            },
+          },
+          exp: Math.floor(Date.now() / 1000) + 60 * 5,
         },
-        //message expires in 5 minutes
-        exp: Math.floor(Date.now() / 1000) + 60 * 5
-    }, SCALEDRONE_CHANNEL_SECRET);
-    res.send(token);
-});
-app.listen(19000, () => console.log('Server listening on port 3000') )
+        SCALEDRONE_CHANNEL_SECRET);
+        res.send(token);
+    } 
+);
+app.listen(19002, () => console.log('Server listening on port 19002'));

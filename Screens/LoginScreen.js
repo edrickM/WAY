@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#000000',
-    fontWeight: '700',
+    fontWeight: '500',
     fontSize: 16,
   },
   clickableText: {

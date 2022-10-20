@@ -9,24 +9,31 @@ import {
 } from 'react-native';
 import MapView, {Marker, AnimatedRegion} from 'react-native-maps';
 const Scaledrone = require('scaledrone-react-native');
-const SCALEDRONE_CHANNEL_ID =('PMPs48ZjR8VGrTSE');
-
+const SCALEDRONE_CHANNEL_ID = 'PMPs48ZjR8VGrTSE';
+import * as Location from 'expo-location';
 const screen = Dimensions.get('window');
-
+import openMap from 'react-native-open-maps'
 const ASPECT_RATIO = screen.width / screen.height;
 const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
-export default class App extends Component {
+let foregroundSubscription = null;
 
+export default class App extends Component {
   constructor() {
     super();
     this.state = {
-      members: []
+      members: [],
+      location: {},
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    let {status} = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      console.log('Permission to access location was denied');
+      return;
+    }
     const drone = new Scaledrone(SCALEDRONE_CHANNEL_ID);
     drone.on('error', error => console.error(error));
     drone.on('close', reason => console.error(reason));
@@ -36,42 +43,42 @@ export default class App extends Component {
       if (error) {
         return console.error(error);
       }
-      Alert.prompt(
-        'Please insert your name',
-        null,
-        name => doAuthRequest(drone.clientId, name).then(
-          jwt => drone.authenticate(jwt)
-        )
+      Alert.prompt('Please insert your name', null, name =>
+        doAuthRequest(drone.clientId, name).then(jwt =>
+          drone.authenticate(jwt),
+        ),
       );
     });
+
     const room = drone.subscribe('observable-locations', {
-      historyCount: 50 // load 50 past messages
+      historyCount: 50, // load 50 past messages
     });
-    room.on('open', error => {
+    room.on('open', async error => {
       if (error) {
         return console.error(error);
       }
-      this.startLocationTracking(position => {
-        const {latitude, longitude} = position.coords;
+      let location = await Location.getCurrentPositionAsync(
+        {
+          accuracy: Location.Accuracy.Highest,
+          distanceInterval: 10,
+          maximumAge: 10000,
+        },
+      );
+        const {latitude, longitude} = location.coords;
         // publish device's new location
         drone.publish({
           room: 'observable-locations',
-          message: {latitude, longitude}
-        });
+          message: {latitude, longitude},
       });
     });
     // received past message
     room.on('history_message', message =>
-      this.updateLocation(message.data, message.clientId)
+      this.updateLocation(message.data, message.clientId),
     );
     // received new message
-    room.on('data', (data, member) =>
-      this.updateLocation(data, member.id)
-    );
+    room.on('data', (data, member) => this.updateLocation(data, member.id));
     // array of all connected members
-    room.on('members', members =>
-      this.setState({members})
-    );
+    room.on('members', members => this.setState({members}));
     // new member joined room
     room.on('member_join', member => {
       const members = this.state.members.slice(0);
@@ -89,17 +96,6 @@ export default class App extends Component {
     });
   }
 
-  startLocationTracking(callback) {
-    navigator.geolocation.watchPosition(
-      callback,
-      error => console.log(error),
-      {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 1000
-      }
-    );
-  }
 
   updateLocation(data, memberId) {
     const {members} = this.state;
@@ -109,10 +105,12 @@ export default class App extends Component {
       return;
     }
     if (member.location) {
-      member.location.timing({
-        latitude: data.latitude,
-        longitude: data.longitude,
-      }).start();
+      member.location
+        .timing({
+          latitude: data.latitude,
+          longitude: data.longitude,
+        })
+        .start();
     } else {
       member.location = new AnimatedRegion({
         latitude: data.latitude,
@@ -129,27 +127,27 @@ export default class App extends Component {
       <View style={styles.container}>
         <MapView
           style={styles.map}
-          ref={ref => {this.map = ref;}}
+          ref={ref => {
+            this.map = ref;
+          }}
           initialRegion={{
             latitude: 37.600425,
             longitude: -122.385861,
             latitudeDelta: LATITUDE_DELTA,
             longitudeDelta: LONGITUDE_DELTA,
-          }}
-        >
+          }}>
           {this.createMarkers()}
         </MapView>
         <View pointerEvents="none" style={styles.members}>
           {this.createMembers()}
         </View>
-        {/* <View style={styles.buttonContainer}>
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
             onPress={() => this.fitToMarkersToMap()}
-            style={[styles.bubble, styles.button]}
-          >
-            <Text>Fit Markers Onto Map</Text>
+            style={[styles.buttonOutline, styles.button]}>
+            <Text style={styles.buttonText}>Fit Markers Onto Map</Text>
           </TouchableOpacity>
-        </View> */}
+        </View>
       </View>
     );
   }
@@ -187,30 +185,43 @@ export default class App extends Component {
 
   fitToMarkersToMap() {
     const {members} = this.state;
-    this.map.fitToSuppliedMarkers(members.map(m => m.id), true);
+    this.map.fitToSuppliedMarkers(
+      members.map(m => m.id),
+      true,
+    );
+  }
+
+  openGps(lat,long) {
+    openMap({latitude: lat, longitude: long});
   }
 }
 
 //Post request that sends clientId and name to server
-async function doAuthRequest(clientId, name) {
+function doAuthRequest(clientId, name) {
   let status;
-  return fetch('http://10.22.151.48:19000/auth', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+  return fetch(
+    'https://69da-2605-ad80-30-841a-e4ab-2e1e-f3a5-a8c.ngrok.io/auth',
+    {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({clientId, name}),
     },
-    body: JSON.stringify({clientId, name}),
-  }).then(res => {
-    status = res.status;
-    return res.text();
-  }).then(text => {
-    if (status === 200) {
-      return text;
-    } else {
-      alert(text);
-    }
-  }).catch(error => console.error(error));
+  )
+    .then(res => {
+      status = res.status;
+      return res.text();
+    })
+    .then(text => {
+      if (status === 200) {
+        return text;
+      } else {
+        alert(text);
+      }
+    })
+    .catch(error => console.error(error));
 }
 
 const styles = StyleSheet.create({
@@ -234,16 +245,30 @@ const styles = StyleSheet.create({
     width: 200,
     alignItems: 'stretch',
   },
-  button: {
-    width: 80,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    marginHorizontal: 10,
-  },
   buttonContainer: {
-    flexDirection: 'row',
-    marginVertical: 20,
-    backgroundColor: 'transparent',
+    width: 190,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 80,
+    paddingBottom: 25,
+  },
+  button: {
+    // backgroundColor: '#002376',
+    width: '100%',
+    padding: 15,
+    borderRadius: 21,
+    alignItems: 'center',
+  },
+  buttonOutline: {
+    backgroundColor: 'white',
+    marginTop: 5,
+    borderColor: '#0782f9',
+    borderWidth: 2,
+  },
+  buttonText: {
+    color: '#000000',
+    fontWeight: '700',
+    fontSize: 10,
   },
   members: {
     flexDirection: 'column',
@@ -268,5 +293,5 @@ const styles = StyleSheet.create({
     height: 30,
     width: 30,
     borderRadius: 15,
-  }
+  },
 });
