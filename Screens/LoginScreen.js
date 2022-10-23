@@ -10,12 +10,13 @@ import {
   Platform,
   TouchableOpacity,
   Image,
+  Al
 } from 'react-native';
 import {useState, useEffect} from 'react';
 import {auth} from '../firebase';
 import {useNavigation} from '@react-navigation/core';
 import logo from '../assets/logo.png';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 const LoginScreen = () => {

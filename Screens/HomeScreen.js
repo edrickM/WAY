@@ -16,15 +16,14 @@ import openMap from 'react-native-open-maps'
 const ASPECT_RATIO = screen.width / screen.height;
 const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+import {auth} from '../firebase';
 
-let foregroundSubscription = null;
 
 export default class App extends Component {
   constructor() {
     super();
     this.state = {
       members: [],
-      location: {},
     };
   }
 
@@ -34,20 +33,20 @@ export default class App extends Component {
       console.log('Permission to access location was denied');
       return;
     }
+
+    const user = auth.currentUser;
+
     const drone = new Scaledrone(SCALEDRONE_CHANNEL_ID);
     drone.on('error', error => console.error(error));
     drone.on('close', reason => console.error(reason));
 
-    //on open, prompt user for name and authenticate with jwt
+    //on open, get user for name and authenticate with jwt
     drone.on('open', error => {
       if (error) {
         return console.error(error);
       }
-      Alert.prompt('Please insert your name', null, name =>
-        doAuthRequest(drone.clientId, name).then(jwt =>
-          drone.authenticate(jwt),
-        ),
-      );
+      doAuthRequest(drone.clientId, user.displayName).then(jwt =>
+        drone.authenticate(jwt))
     });
 
     const room = drone.subscribe('observable-locations', {
@@ -139,7 +138,7 @@ export default class App extends Component {
           {this.createMarkers()}
         </MapView>
         <View pointerEvents="none" style={styles.members}>
-          {this.createMembers()}
+            {this.createMembers()}
         </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
@@ -175,12 +174,21 @@ export default class App extends Component {
     return members.map(member => {
       const {name, color} = member.authData;
       return (
-        <View key={member.id} style={styles.member}>
+          <View key={member.id} style={styles.member}>
           <View style={[styles.avatar, {backgroundColor: color}]}></View>
           <Text style={styles.memberName}>{name}</Text>
         </View>
       );
     });
+  }
+
+  fitUserToMap(memberId){
+    const {members} = this.state;
+    const member = members.find(m => m.id === memberId);
+    this.map.animateToRegion(
+      member.location,
+      1
+    )
   }
 
   fitToMarkersToMap() {
@@ -200,7 +208,7 @@ export default class App extends Component {
 function doAuthRequest(clientId, name) {
   let status;
   return fetch(
-    'https://69da-2605-ad80-30-841a-e4ab-2e1e-f3a5-a8c.ngrok.io/auth',
+    'https://b820-2605-ad80-30-841a-ac6c-63c0-2348-68fa.ngrok.io/auth',
     {
       method: 'POST',
       headers: {

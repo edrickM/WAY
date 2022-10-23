@@ -7,49 +7,106 @@ import {
   Keyboard,
   TouchableOpacity,
   TextInput,
+  Image,
+  Alert,
 } from 'react-native';
+import logo from '../assets/logo.png';
 import React from 'react';
 import {auth} from '../firebase';
 import {useState, useEffect} from 'react';
-
-const handleSignUp = () => {
-  auth
-    .createUserWithEmailAndPassword(email, password)
-    .then(userCredentials => {
-      const user = userCredentials.user;
-      console.log('Created new user:', user.uid);
-    })
-    .catch(error => alert(error.message));
-};
+import {useNavigation} from '@react-navigation/core';
 
 const RegistrationScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
+
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        navigation.navigate('Home');
+        console.log("logged in")
+      }
+      else{
+        navigation.navigate('Auth')
+        console.log("not logged in")
+      }
+    });
+    return unsubscribe;
+  }, []);
+  
+  const handleSignUp = () => {
+    if(password !== confirmPassword){
+      Alert("Passwords dont't match")
+    }
+    auth
+      .createUserWithEmailAndPassword(email, password)
+      .then(function(res){
+        return res.user.updateProfile({
+          displayName: username
+        })
+      })
+      .catch(error => alert(error.message));
+  };
+
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS == 'ios' ? 'padding' : 'height'}>
-        <View style={styles.signUpContainer}>
-          <Text style={styles.signUpText}>Sign Up</Text>
-        </View>
         <View style={styles.inputContainer}>
+          <View style={styles.logoContainer}>
+            <Image source={logo} style={styles.logo}></Image>
+            <Text style={styles.logoText}>Resgister</Text>
+          </View>
+          <Text style={styles.labelText}>Email</Text>
           <TextInput
-            style={styles.emailInput}
-            placeholder="Email"
-            placeholderTextColor="#929292"
             value={email}
             onChangeText={text => setEmail(text)}
+            style={styles.input}
           />
-          <TextInput style={styles.firstNameInput}></TextInput>
-          <TextInput style={styles.lastNameInput}></TextInput>
-
+          <Text style={styles.labelText}>Username</Text>
+          <TextInput
+            value={username}
+            onChangeText={text => setUsername(text)}
+            style={styles.input}
+          />
+          <View flexDirection="row">
+            <Text style={styles.labelText}>Password</Text>
+            <Text style={styles.labelText}>Re-enter Password</Text>
+          </View>
+          <View style={styles.inputPasswordContainer}>
+            <TextInput
+              value={password}
+              onChangeText={text => setPassword(text)}
+              style={styles.inputPassword}
+              secureTextEntry={true}
+            />
+            <TextInput
+              value={confirmPassword}
+              onChangeText={text => setConfirmPassword(text)}
+              style={styles.inputPassword}
+              secureTextEntry={true}
+            />
+          </View>
         </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={styles.button}
-            onPress={handleSignUp}></TouchableOpacity>
+            style={[styles.button, styles.buttonOutline]}
+            onPress={handleSignUp}>
+            <Text style={styles.buttonText}>Sign up</Text>
+          </TouchableOpacity>
+          <Text style={styles.smallText}>
+            Already have an account?
+            <Text
+              style={styles.clickableText}
+              onPress={() => navigation.navigate('Login')}>
+              Log in
+            </Text>
+          </Text>
         </View>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
@@ -63,40 +120,101 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'white',
   },
   inputContainer: {
-    marginTop: -150,
     width: 299,
+    marginTop: 310,
   },
-  emailInput: {
+  input: {
     backgroundColor: '#D3DEDC',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 13,
+    marginTop: 5,
     marginBottom: 5,
   },
-  firstNameInput: {
-    backgroundColor: '#D3DEDC',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 13,
-    marginBottom: 5,
+  inputPasswordContainer: {
+    width: 300,
     flexDirection: 'row',
   },
-  lastNameInput: {
+  inputPassword: {
     backgroundColor: '#D3DEDC',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 13,
+    marginTop: 5,
     marginBottom: 5,
-    flexDirection: 'row',
+    width: 145,
+    marginRight: 10,
   },
-  buttonContainer: {},
-  signUpContainer: {
-    bottom: 220,
+  labelText: {
+    color: '#000000',
+    fontWeight: '500',
+    fontSize: 14,
+    marginLeft: 5,
+    marginRight: 85,
   },
-  signUpText: {
-    fontSize: 40,
-    fontWeight: 'bold',
+  buttonContainer: {
+    width: 190,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 80,
+  },
+  button: {
+    backgroundColor: '#002376',
+    width: '100%',
+    padding: 15,
+    borderRadius: 21,
+    alignItems: 'center',
+  },
+  buttonOutline: {
+    backgroundColor: 'white',
+    marginTop: 5,
+    borderColor: '#0782f9',
+    borderWidth: 2,
+  },
+  buttonOutlineText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  buttonText: {
+    color: '#000000',
+    fontWeight: '500',
+    fontSize: 16,
+  },
+  clickableText: {
+    color: '#5D9FC6',
+    fontWeight: '700',
+    fontSize: 10,
+
+    textAlign: 'center',
+  },
+  smallText: {
+    marginTop: 5,
+    color: '#354259',
+    fontWeight: '700',
+    fontSize: 10,
+    textAlign: 'center',
+  },
+  logoContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    left: 15,
+    bottom: 10,
+  },
+  logo: {
+    position: 'absolute',
+    justifyContent: 'center',
+    bottom: 30,
+    alignItems: 'center',
+    resizeMode: 'contain',
+    width: 210,
+  },
+  logoText: {
+    marginRight: 20,
+    alignContent: 'center',
+    bottom: 35,
   },
 });

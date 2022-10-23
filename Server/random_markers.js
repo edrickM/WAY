@@ -10,7 +10,7 @@ const locations = [
 
 function doAuthRequest(clientId, name) {
   let status;
-  return fetch('https://69da-2605-ad80-30-841a-e4ab-2e1e-f3a5-a8c.ngrok.io/auth', {
+  return fetch('https://ee76-47-184-108-211.ngrok.io/auth', {
     method: 'POST',
     headers: {
       Accept: 'application/json',

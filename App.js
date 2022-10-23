@@ -28,18 +28,19 @@ const Auth = () => {
   )
 }
 
-const AppStack = () => {
-  return(
-    <Stack.Navigator>
-      <Stack.Screen 
-      options={{headerShown:false}}
-      name="Home"
-      component={HomeScreen}
-      />
-
-    </Stack.Navigator>
-  )
-}
+// export default function App() {
+//   return(
+//     <NavigationContainer>
+//       <Stack.Navigator>
+//       <Stack.Screen 
+//       options={{headerShown:false}}
+//       name="Home"
+//       component={RegistrationScreen}
+//       />
+//     </Stack.Navigator>
+//     </NavigationContainer>
+//   )
+// }
 
 
 
